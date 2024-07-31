@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.1.0)
 project(RealsenseExamplesAlignAdvanced)
 
 if(BUILD_GRAPHICAL_EXAMPLES)
-    add_executable(rs-align-advanced rs-align-advanced.cpp ../../third-party/imgui/imgui.cpp ../../third-party/imgui/imgui_draw.cpp ../../third-party/imgui/imgui_impl_glfw.cpp)
+    add_executable(rs-align-advanced rs-align-advanced.cpp ../../third-party/imgui/imgui.cpp ../../third-party/imgui/imgui_draw.cpp ../../third-party/imgui/imgui_impl_glfw.cpp ../../third-party/imgui/realsense_imgui.cpp ../../third-party/imgui/imgui_impl_opengl3.cpp ../../third-party/imgui/imgui_widgets.cpp ../../third-party/imgui/imgui_tables.cpp)
     set_property(TARGET rs-align-advanced PROPERTY CXX_STANDARD 11)
     target_link_libraries(rs-align-advanced ${DEPENDENCIES})
     include_directories(../../common ../../third-party/imgui ../../examples)

@@ -7,6 +7,8 @@
 #endif
 #endif
 
+//***********NEW_ADD**************//
+#include <realsense_imgui.h>
 #include "viewer.h"
 #include "os.h"
 
@@ -1372,7 +1374,9 @@ namespace rs2
         ImGui::SetNextWindowPos({ viewer_rect.x, viewer_rect.y });
         ImGui::SetNextWindowSize({ viewer_rect.w, viewer_rect.h });
 
-        ImGui::Begin("Viewport", nullptr, { viewer_rect.w, viewer_rect.h }, 0.f, flags);
+        ImGui::Begin("Viewport", nullptr, flags);
+        ImGui::SetNextWindowSize({ viewer_rect.w, viewer_rect.h });
+        ImGui::SetNextWindowBgAlpha(0.f);
 
         try
         {
@@ -1796,7 +1800,7 @@ namespace rs2
 
                     // Don't draw text in boxes that are too small...
                     auto h = bbox.h;
-                    ImGui::PushStyleColor( ImGuiCol_Text, ImColor( 1.f, 1.f, 1.f, a ) );
+                    ImGui::PushStyleColor( ImGuiCol_Text, (ImVec4&)ImColor( 1.f, 1.f, 1.f, a ) );
                     ImColor bg( dark_sensor_bg.x, dark_sensor_bg.y, dark_sensor_bg.z, dark_sensor_bg.w * a );
 
                     if( fabs(object.mean_depth) > 0.f )
@@ -2207,7 +2211,7 @@ namespace rs2
 
         glDisable(GL_DEPTH_TEST);
 
-        if (ImGui::IsKeyPressed('R') || ImGui::IsKeyPressed('r'))
+        if (ImGui::IsKeyPressed(ImGuiKey_R))
         {
             reset_camera();
         }
@@ -3020,22 +3024,22 @@ namespace rs2
         auto x_axis = cross(dir, up);
         auto step = sec_since_update * 0.3f;
 
-        if (ImGui::IsKeyPressed('w') || ImGui::IsKeyPressed('W'))
+        if (ImGui::IsKeyPressed(ImGuiKey_W))
         {
             pos = pos + dir * step;
             target = target + dir * step;
         }
-        if (ImGui::IsKeyPressed('s') || ImGui::IsKeyPressed('S'))
+        if (ImGui::IsKeyPressed(ImGuiKey_S))
         {
             pos = pos - dir * step;
             target = target - dir * step;
         }
-        if (ImGui::IsKeyPressed('d') || ImGui::IsKeyPressed('D'))
+        if (ImGui::IsKeyPressed(ImGuiKey_D))
         {
             pos = pos + x_axis * step;
             target = target + x_axis * step;
         }
-        if (ImGui::IsKeyPressed('a') || ImGui::IsKeyPressed('A'))
+        if (ImGui::IsKeyPressed(ImGuiKey_A))
         {
             pos = pos - x_axis * step;
             target = target - x_axis * step;
@@ -3052,7 +3056,7 @@ namespace rs2
             auto cy = mouse.cursor.y + overflow.y;
             auto py = mouse.prev_cursor.y + overflow.y;
 
-            auto dragging = ImGui::IsKeyDown(GLFW_KEY_LEFT_CONTROL);
+            auto dragging = ImGui::IsKeyDown(ImGuiKey_LeftCtrl);
 
             // Limit how much user mouse can jump between frames
             // This can work poorly when the app FPS is really terrible (< 10)
@@ -3301,7 +3305,7 @@ namespace rs2
                 _measurements.show_tooltip(window);
         }
 
-        if (ImGui::IsKeyPressed(' '))
+        if (ImGui::IsKeyPressed(ImGuiKey_Space))
         {
             if (paused)
             {

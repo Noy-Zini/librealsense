@@ -602,7 +602,7 @@ int main(int argc, const char** argv) try
                     ImGui::SameLine();
                     //ImGui::SetCursorPosY(ImGui::GetCursorPosY() - 1);
                     ImGui::PushItemWidth(width - ImGui::GetCursorPosX() - 10);
-                    if (ImGui::GetWindowIsFocused() && !ImGui::IsAnyItemActive())
+                    if (ImGui::IsWindowFocused() && !ImGui::IsAnyItemActive())
                     {
                         ImGui::SetKeyboardFocusHere();
                     }
@@ -620,7 +620,7 @@ int main(int argc, const char** argv) try
                     ImGui::PopItemWidth();
                     ImGui::SetCursorPosX(width / 2 - 105);
 
-                    if (ImGui::ButtonEx("OK", { 100.f, 25.f }) || ImGui::IsKeyDown(GLFW_KEY_ENTER) || ImGui::IsKeyDown(GLFW_KEY_KP_ENTER))
+                    if (ImGui::ButtonEx("OK", { 100.f, 25.f }) || ImGui::IsKeyDown(ImGuiKey_Enter) || ImGui::IsKeyDown(ImGuiKey_KeypadEnter))
                     {
                         try
                         {
@@ -640,7 +640,7 @@ int main(int argc, const char** argv) try
                     }
                     ImGui::SameLine();
                     ImGui::SetCursorPosX(width / 2 + 5);
-                    if (ImGui::Button("Cancel", { 100.f, 25.f }) || ImGui::IsKeyDown(GLFW_KEY_ESCAPE))
+                    if (ImGui::Button("Cancel", { 100.f, 25.f }) || ImGui::IsKeyDown(ImGuiKey_Escape))
                     {
                         ip_address = "";
                         close_ip_popup = true;
@@ -713,7 +713,7 @@ int main(int argc, const char** argv) try
                 }
             }
 
-            ImGui::SetContentRegionWidth(windows_width);
+            ImGui::SetNextWindowContentSize(ImVec2(ImGui::GetWindowWidth(), ImGui::GetWindowHeight()));
 
             auto pos = ImGui::GetCursorScreenPos();
             auto h = ImGui::GetWindowHeight();

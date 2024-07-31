@@ -1,6 +1,8 @@
 // License: Apache 2.0. See LICENSE file in root directory.
 // Copyright(c) 2023 Intel Corporation. All Rights Reserved.
 
+//***********NEW_ADD**************//
+#include <realsense_imgui.h>
 #include "stream-model.h"
 #include "subdevice-model.h"
 #include "viewer.h"

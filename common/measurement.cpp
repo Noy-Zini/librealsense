@@ -77,7 +77,7 @@ std::vector<int> measurement_state::find_path(int from, int to)
 
 void measurement::add_point(interest_point p)
 {
-    auto shift = ImGui::IsKeyDown(GLFW_KEY_LEFT_SHIFT) || ImGui::IsKeyDown(GLFW_KEY_RIGHT_SHIFT);
+    auto shift = ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift);
 
     if (is_enabled())
     {
@@ -334,7 +334,7 @@ void measurement::update_input(ux_window& win, const rs2::rect& viewer_rect)
 {
     id = 0;
 
-    if (ImGui::IsKeyPressed('Z') || ImGui::IsKeyPressed('z'))
+    if (ImGui::IsKeyPressed(ImGuiKey_Z))
         restore_state();
 
     input_ctrl.prev_mouse_down = input_ctrl.mouse_down;
@@ -430,7 +430,7 @@ void measurement::restore_state()
 
 void measurement::draw(ux_window& win)
 {
-    auto shift = ImGui::IsKeyDown(GLFW_KEY_LEFT_SHIFT) || ImGui::IsKeyDown(GLFW_KEY_RIGHT_SHIFT);
+    auto shift = ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift);
 
     auto p_idx = point_hovered(win);
     if (p_idx >= 0 && !win.get_mouse().mouse_down[0])

@@ -10,7 +10,7 @@
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
-
+#include <imgui_impl_opengl3.h>
 #include "device-model.h"
 
 #include <rsutils/os/special-folder.h>
@@ -215,13 +215,16 @@ namespace rs2
    
     void ux_window::open_window()
     {
+        ImGui::CreateContext();
         if (_win)
         {
             rs2::gl::shutdown_rendering();
             if (_use_glsl_proc) rs2::gl::shutdown_processing();
 
             ImGui::GetIO().Fonts->ClearFonts();  // To be refactored into Viewer theme object
+            ImGui_ImplOpenGL3_Shutdown();
             ImGui_ImplGlfw_Shutdown();
+            ImGui::DestroyContext();
             glfwDestroyWindow(_win);
             glfwDestroyCursor(_hand_cursor);
             glfwDestroyCursor(_cross_cursor);
@@ -371,7 +374,9 @@ namespace rs2
 
         setup_icon();
 
-        ImGui_ImplGlfw_Init(_win, true);
+        
+        ImGui_ImplGlfw_InitForOpenGL(_win, false);
+        ImGui_ImplOpenGL3_Init();
 
         if (_use_glsl_render)
             _2d_vis = std::make_shared<visualizer_2d>(std::make_shared<splash_screen_shader>());
@@ -391,6 +396,7 @@ namespace rs2
         });
         glfwSetMouseButtonCallback(_win, [](GLFWwindow* w, int button, int action, int mods)
         {
+            ImGui_ImplGlfw_MouseButtonCallback(w,button,action,mods);
             auto data = reinterpret_cast<ux_window*>(glfwGetWindowUserPointer(w));
             data->_mouse.mouse_down[0] = (button == GLFW_MOUSE_BUTTON_1) && (action != GLFW_RELEASE);
             data->_mouse.mouse_down[1] = (button == GLFW_MOUSE_BUTTON_2) && (action != GLFW_RELEASE);
@@ -658,6 +664,7 @@ namespace rs2
 
         ImGui::GetIO().Fonts->ClearFonts();  // To be refactored into Viewer theme object
         ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
         glfwDestroyWindow(_win);
 
         glfwDestroyCursor(_hand_cursor);
@@ -743,8 +750,9 @@ namespace rs2
         ImGui::GetIO().MouseWheel = _mouse.ui_wheel;
         _mouse.ui_wheel = 0.f;
 
-        ImGui_ImplGlfw_NewFrame(_scale_factor);
-        //ImGui::NewFrame();
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
     }
 
     void ux_window::begin_viewport()
@@ -766,7 +774,7 @@ namespace rs2
         if (!_first_frame)
         {
             ImGui::Render();
-
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             glfwSwapBuffers(_win);
             _mouse.mouse_wheel = 0;
         }

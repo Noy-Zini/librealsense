@@ -7,6 +7,8 @@
 #endif
 #endif
 
+//***********NEW_ADD**************//
+#include <realsense_imgui.h>
 #include <librealsense2/rs.hpp>
 
 #include "model-views.h"
