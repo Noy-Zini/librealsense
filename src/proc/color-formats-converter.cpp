@@ -2,7 +2,7 @@
 // Copyright(c) 2019 Intel Corporation. All Rights Reserved.
 
 #include "color-formats-converter.h"
-
+#include <turbojpeg.h>
 #include "option.h"
 #include "image-avx.h"
 #include "image.h"
@@ -1088,16 +1088,82 @@ namespace librealsense
     /////////////////////////////
     void unpack_mjpeg( uint8_t * const dest[], const uint8_t * source, int width, int height, int actual_size, int input_size)
     {
-        int w, h, bpp;
-        auto uncompressed_rgb = stbi_load_from_memory(source, actual_size, &w, &h, &bpp, false);
-        if (uncompressed_rgb)
-        {
-            auto uncompressed_size = w * h * bpp;
-            std::memcpy( dest[0], uncompressed_rgb, uncompressed_size );
-            stbi_image_free(uncompressed_rgb);
+
+        const std::string jpeg_path = "C:\\work\\Noy\\librealsense\\build\\Debug\\testorig.jpg";
+        const std::string output_path = "C:\\work\\Noy\\librealsense\\build\\Debug\\output.rgb";
+
+        std::ifstream file(jpeg_path, std::ios::binary | std::ios::ate);
+        if (!file.is_open()) {
+            std::cerr << "Error: Cannot open JPEG file: " << jpeg_path << std::endl;
+            return;
         }
-        else
-            LOG_ERROR("jpeg decode failed");
+
+        std::streamsize file_size = file.tellg();
+        if (file_size <= 0) {
+            std::cerr << "Error: Empty or invalid JPEG file" << std::endl;
+            return;
+        }
+
+        file.seekg(0, std::ios::beg);
+        std::vector<uint8_t> jpeg_buffer(static_cast<size_t>(file_size));
+        if (!file.read(reinterpret_cast<char*>(jpeg_buffer.data()), file_size)) {
+            std::cerr << "Error: Failed to read JPEG file" << std::endl;
+            return;
+        }
+
+        uint8_t* jpeg_data = jpeg_buffer.data();
+
+        // Initialize TurboJPEG decompressor
+        tjhandle tj_instance = tjInitDecompress();
+        if (!tj_instance) {
+            std::cerr << "Error: TurboJPEG initialization failed: " << tjGetErrorStr() << std::endl;
+            return;
+        }
+
+        // Parse JPEG header
+        int jpeg_width = 0, jpeg_height = 0, jpeg_subsamp = 0;
+
+        if (tjDecompressHeader2(tj_instance, jpeg_data, static_cast<unsigned long>(file_size),
+            &jpeg_width, &jpeg_height, &jpeg_subsamp) != 0) {
+            std::cerr << "Error: JPEG header parsing failed: " << tjGetErrorStr() << std::endl;
+            tjDestroy(tj_instance);
+            return;
+        }
+
+        // Set dimensions
+        const int width1 = jpeg_width;
+        const int height1 = jpeg_height;
+
+        const int pixel_format = TJPF_RGB;
+        const int pixel_size = tjPixelSize[pixel_format];
+        const int pitch = width1 * pixel_size;
+        const int buffer_size = width1 * height1 * pixel_size;
+
+        std::vector<uint8_t> rgb_output(buffer_size);
+        int flags = TJFLAG_ACCURATEDCT | TJFLAG_NOREALLOC;
+        // Decompress JPEG into RGB buffer
+        if (tjDecompress2(tj_instance, jpeg_data, static_cast<unsigned long>(file_size),
+            rgb_output.data(), width1, 0, height1,
+            TJPF_RGB, flags) != 0) {
+            std::cerr << "Error: JPEG decompression failed: " << tjGetErrorStr() << std::endl;
+            tjDestroy(tj_instance);
+            return;
+        }
+
+        std::ofstream out(output_path, std::ios::binary);
+        if (!out) {
+            std::cerr << "Error: Could not open file for writing: " << output_path << std::endl;
+            tjDestroy(tj_instance);
+            return;
+        }
+
+        out.write(reinterpret_cast<const char*>(rgb_output.data()), buffer_size);
+        out.close();
+
+        std::cout << "Successfully wrote RGB data to: " << output_path << std::endl;
+
+        // Cleanup
+        tjDestroy(tj_instance);
     }
 
     /////////////////////////////

@@ -10,6 +10,12 @@ include(${_proc_rel_path}/sse/CMakeLists.txt)
 
 include(${_proc_rel_path}/neon/CMakeLists.txt)
 
+include(${CMAKE_CURRENT_LIST_DIR}/libjpeg-turbo.cmake)
+setup_libjpeg_turbo()
+
+target_include_directories(${LRS_TARGET} PRIVATE ${LIBJPEG_TURBO_INCLUDE_DIR})
+target_link_libraries(${LRS_TARGET} PRIVATE ${LIBJPEG_TURBO_LIBRARY})
+
 target_sources(${LRS_TARGET}
     PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/processing-blocks-factory.cpp"
