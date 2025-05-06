@@ -6,6 +6,7 @@
 #include "option.h"
 #include "image-avx.h"
 #include "image.h"
+#include <turbojpeg.h>
 
 #define STB_IMAGE_STATIC
 #define STB_IMAGE_IMPLEMENTATION
@@ -1089,15 +1090,91 @@ namespace librealsense
     void unpack_mjpeg( uint8_t * const dest[], const uint8_t * source, int width, int height, int actual_size, int input_size)
     {
         int w, h, bpp;
+        auto duration = 0;
+        auto before = std::chrono::system_clock::now();
         auto uncompressed_rgb = stbi_load_from_memory(source, actual_size, &w, &h, &bpp, false);
         if (uncompressed_rgb)
         {
             auto uncompressed_size = w * h * bpp;
             std::memcpy( dest[0], uncompressed_rgb, uncompressed_size );
+            auto after = std::chrono::system_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(after - before).count();
+            LOG_INFO(rsutils::string::from() << duration);
             stbi_image_free(uncompressed_rgb);
         }
         else
             LOG_ERROR("jpeg decode failed");
+
+        static std::ofstream log_file("decode_timings_stbi.csv");
+        static int log_count = 0;
+        static std::mutex log_mutex;
+
+        {
+            std::lock_guard<std::mutex> lock(log_mutex);
+            if (log_count == 0)
+                log_file << "duration_us\n";
+
+            if (log_count < 500) {
+                log_file << duration << "\n";
+                log_count++;
+                if (log_count == 500) {
+                    log_file.flush();
+                    log_file.close();
+                }
+                log_file.flush();
+            }
+            if (log_count == 500) {
+                log_file.flush();
+                log_file.close();
+            }
+        }
+    }
+
+    void unpack_mjpeg_turbo(uint8_t* const dest[], const uint8_t* source, int width, int height, int actual_size, int input_size)
+    {
+        tjhandle tj_instance = tjInitDecompress();
+        if (!tj_instance) {
+            LOG_ERROR("TurboJPEG decode failed");
+            return;
+        }
+
+        auto before = std::chrono::system_clock::now();
+        if (tjDecompress2(tj_instance, source, actual_size,
+            dest[0], width, 0, height, TJPF_RGB, 0) != 0) {
+            LOG_ERROR("TurboJPEG decode failed");
+            tjDestroy(tj_instance);
+            return;
+        }
+        auto after = std::chrono::system_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(after - before).count();
+
+        LOG_INFO(rsutils::string::from() << duration);
+
+        static std::ofstream log_file("decode_timings_turbo.csv");
+        static int log_count = 0;
+        static std::mutex log_mutex;
+
+        {
+            std::lock_guard<std::mutex> lock(log_mutex);
+            if (log_count == 0)
+                log_file << "duration_us\n";
+
+            if (log_count < 500) {
+                log_file << duration << "\n";
+                log_count++;
+                if (log_count == 500) {
+                    log_file.flush();
+                    log_file.close();
+                }
+                log_file.flush();
+            }
+            if (log_count == 500) {
+                log_file.flush();
+                log_file.close();
+            }
+        }
+
+        tjDestroy(tj_instance);
     }
 
     /////////////////////////////
@@ -1129,6 +1206,11 @@ namespace librealsense
     void mjpeg_converter::process_function( uint8_t * const dest[], const uint8_t * source, int width, int height, int actual_size, int input_size)
     {
         unpack_mjpeg(dest, source, width, height, actual_size, input_size);
+    }
+
+    void turbo_mjpeg_converter::process_function(uint8_t* const dest[], const uint8_t* source, int width, int height, int actual_size, int input_size)
+    {
+        unpack_mjpeg_turbo(dest, source, width, height, actual_size, input_size);
     }
 
     void bgr_to_rgb::process_function( uint8_t * const dest[], const uint8_t * source, int width, int height, int actual_size, int input_size)

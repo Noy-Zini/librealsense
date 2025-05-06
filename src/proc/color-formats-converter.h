@@ -50,6 +50,20 @@ namespace librealsense
         void process_function( uint8_t * const dest[], const uint8_t * source, int width, int height, int actual_size, int input_size) override;
     };
 
+    class LRS_EXTENSION_API turbo_mjpeg_converter : public color_converter
+    {
+    public:
+        turbo_mjpeg_converter(rs2_format target_format) :
+            turbo_mjpeg_converter("Turbo MJPEG Converter", target_format) {
+        };
+
+    protected:
+        turbo_mjpeg_converter(const char* name, rs2_format target_format) :
+            color_converter(name, target_format) {
+        };
+        void process_function(uint8_t* const dest[], const uint8_t* source, int width, int height, int actual_size, int input_size) override;
+    };
+
     class LRS_EXTENSION_API bgr_to_rgb : public color_converter
     {
     public:

@@ -10,6 +10,31 @@ include(${_proc_rel_path}/sse/CMakeLists.txt)
 
 include(${_proc_rel_path}/neon/CMakeLists.txt)
 
+if(BUILD_WITH_DDS)
+	include(ExternalProject)
+
+	set(LIBJPEG_TURBO_INSTALL_DIR ${CMAKE_BINARY_DIR}/libjpeg-turbo)
+
+	ExternalProject_Add(libjpeg-turbo
+		PREFIX libjpeg-turbo
+		GIT_REPOSITORY "https://github.com/libjpeg-turbo/libjpeg-turbo.git"
+		GIT_TAG "main"
+		SOURCE_DIR "${CMAKE_BINARY_DIR}/third-party/libjpeg-turbo"
+		INSTALL_DIR ${LIBJPEG_TURBO_INSTALL_DIR}
+		CMAKE_ARGS
+			-DCMAKE_INSTALL_PREFIX=${LIBJPEG_TURBO_INSTALL_DIR}
+			-DCMAKE_POSITION_INDEPENDENT_CODE=ON
+			-DENABLE_SHARED=OFF
+			-DENABLE_STATIC=ON
+	)
+
+	set(LIBJPEG_TURBO_INCLUDE_DIR "${LIBJPEG_TURBO_INSTALL_DIR}/include")
+	set(LIBJPEG_TURBO_LIBRARY "${LIBJPEG_TURBO_INSTALL_DIR}/lib/turbojpeg.lib")
+
+	target_include_directories(${LRS_TARGET} PRIVATE ${LIBJPEG_TURBO_INCLUDE_DIR})
+	target_link_libraries(${LRS_TARGET} PRIVATE ${LIBJPEG_TURBO_LIBRARY})
+endif()
+
 target_sources(${LRS_TARGET}
     PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/processing-blocks-factory.cpp"
