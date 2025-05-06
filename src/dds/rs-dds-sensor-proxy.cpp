@@ -123,7 +123,7 @@ void dds_sensor_proxy::register_basic_converters()
     //        RS2_STREAM_COLOR ) );
     _formats_converter.register_converter({ { RS2_FORMAT_YUYV, RS2_STREAM_COLOR } },
         { { RS2_FORMAT_RGB8, RS2_STREAM_COLOR } },
-        []() { return std::make_shared< mjpeg_converter >(RS2_FORMAT_Y8); });
+        []() { return std::make_shared< mjpeg_converter >(RS2_FORMAT_RGB8); });
 
     // Depth
     _formats_converter.register_converter(
