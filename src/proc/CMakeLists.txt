@@ -29,7 +29,11 @@ if(BUILD_WITH_DDS)
 	)
 
 	set(LIBJPEG_TURBO_INCLUDE_DIR "${LIBJPEG_TURBO_INSTALL_DIR}/include")
-	set(LIBJPEG_TURBO_LIBRARY "${LIBJPEG_TURBO_INSTALL_DIR}/lib/turbojpeg.lib")
+	if(WIN32)
+		set(LIBJPEG_TURBO_LIBRARY "${LIBJPEG_TURBO_INSTALL_DIR}/lib/turbojpeg.lib")
+	else()
+		set(LIBJPEG_TURBO_LIBRARY "${LIBJPEG_TURBO_INSTALL_DIR}/lib/libturbojpeg.a")
+	endif()
 
 	target_include_directories(${LRS_TARGET} PRIVATE ${LIBJPEG_TURBO_INCLUDE_DIR})
 	target_link_libraries(${LRS_TARGET} PRIVATE ${LIBJPEG_TURBO_LIBRARY})

@@ -1087,94 +1087,103 @@ namespace librealsense
     /////////////////////////////
     // MJPEG unpacking routines //
     /////////////////////////////
-    void unpack_mjpeg( uint8_t * const dest[], const uint8_t * source, int width, int height, int actual_size, int input_size)
+    void unpack_mjpeg( uint8_t * const dest[], const uint8_t * source, int width, int height, int actual_size, int input_size )
     {
         int w, h, bpp;
-        auto duration = 0;
+        long duration = -1;
         auto before = std::chrono::system_clock::now();
-        auto uncompressed_rgb = stbi_load_from_memory(source, actual_size, &w, &h, &bpp, false);
-        if (uncompressed_rgb)
+        auto uncompressed_rgb = stbi_load_from_memory( source, actual_size, &w, &h, &bpp, false );
+
+        if( uncompressed_rgb )
         {
             auto uncompressed_size = w * h * bpp;
             std::memcpy( dest[0], uncompressed_rgb, uncompressed_size );
+
             auto after = std::chrono::system_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(after - before).count();
-            LOG_INFO(rsutils::string::from() << duration);
-            stbi_image_free(uncompressed_rgb);
+            auto duration = std::chrono::duration_cast< std::chrono::microseconds >( after - before ).count();
+            LOG_INFO( rsutils::string::from() << duration );
+
+            stbi_image_free( uncompressed_rgb );
         }
         else
-            LOG_ERROR("jpeg decode failed");
+            LOG_ERROR( "jpeg decode failed" );
 
-        static std::ofstream log_file("decode_timings_stbi.csv");
-        static int log_count = 0;
+        static std::vector< long > durations;
         static std::mutex log_mutex;
+        static int log_count = 0;
 
         {
-            std::lock_guard<std::mutex> lock(log_mutex);
-            if (log_count == 0)
-                log_file << "duration_us\n";
+            std::lock_guard< std::mutex > lock( log_mutex );
 
-            if (log_count < 500) {
-                log_file << duration << "\n";
+            if( duration >= 0 && log_count < 500 )
+            {
+                durations.push_back( duration );
                 log_count++;
-                if (log_count == 500) {
-                    log_file.flush();
-                    log_file.close();
-                }
-                log_file.flush();
             }
-            if (log_count == 500) {
-                log_file.flush();
+
+            if( log_count == 500 && ! durations.empty() )
+            {
+                std::ofstream log_file( "decode_timings_stbi.csv" );
+                log_file << "duration_us\n";
+                for( const auto & d : durations )
+                {
+                    log_file << d << "\n";
+                }
                 log_file.close();
+                durations.clear();
             }
         }
     }
 
-    void unpack_mjpeg_turbo(uint8_t* const dest[], const uint8_t* source, int width, int height, int actual_size, int input_size)
+    void unpack_mjpeg_turbo( uint8_t * const dest[], const uint8_t * source, int width, int height, int actual_size, int input_size )
     {
         tjhandle tj_instance = tjInitDecompress();
-        if (!tj_instance) {
-            LOG_ERROR("TurboJPEG decode failed");
+        if( ! tj_instance )
+        {
+            LOG_ERROR( "TurboJPEG decode failed" );
             return;
         }
 
+        auto flags = TJFLAG_FASTDCT | TJFLAG_FASTUPSAMPLE;  // fast decompression flags
         auto before = std::chrono::system_clock::now();
-        if (tjDecompress2(tj_instance, source, actual_size,
-            dest[0], width, 0, height, TJPF_RGB, 0) != 0) {
-            LOG_ERROR("TurboJPEG decode failed");
-            tjDestroy(tj_instance);
+        if( tjDecompress2( tj_instance, source, actual_size, dest[0], width, 0, height, TJPF_RGB, flags ) != 0 )
+        {
+            LOG_ERROR( "TurboJPEG decode failed" );
+            tjDestroy( tj_instance );
             return;
         }
         auto after = std::chrono::system_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(after - before).count();
+        auto duration = std::chrono::duration_cast< std::chrono::microseconds >( after - before ).count();
 
-        LOG_INFO(rsutils::string::from() << duration);
+        LOG_INFO( rsutils::string::from() << duration );
 
-        static std::ofstream log_file("decode_timings_turbo.csv");
-        static int log_count = 0;
+        static std::vector< long > durations;
         static std::mutex log_mutex;
+        static int log_count = 0;
 
         {
-            std::lock_guard<std::mutex> lock(log_mutex);
-            if (log_count == 0)
-                log_file << "duration_us\n";
+            std::lock_guard< std::mutex > lock( log_mutex );
 
-            if (log_count < 500) {
-                log_file << duration << "\n";
+            if( log_count < 500 )
+            {
+                durations.push_back( duration );
                 log_count++;
-                if (log_count == 500) {
-                    log_file.flush();
-                    log_file.close();
-                }
-                log_file.flush();
             }
-            if (log_count == 500) {
-                log_file.flush();
+
+            if( log_count == 500 && ! durations.empty() )
+            {
+                std::ofstream log_file( "decode_timings_turbo.csv" );
+                log_file << "duration_us\n";
+                for( const auto & d : durations )
+                {
+                    log_file << d << "\n";
+                }
                 log_file.close();
+                durations.clear();
             }
         }
 
-        tjDestroy(tj_instance);
+        tjDestroy( tj_instance );
     }
 
     /////////////////////////////
