@@ -35,6 +35,8 @@ if(BUILD_WITH_DDS)
 		set(LIBJPEG_TURBO_LIBRARY "${LIBJPEG_TURBO_INSTALL_DIR}/lib/libturbojpeg.a")
 	endif()
 
+    add_dependencies(${LRS_TARGET} libjpeg-turbo)
+
 	target_include_directories(${LRS_TARGET} PRIVATE ${LIBJPEG_TURBO_INCLUDE_DIR})
 	target_link_libraries(${LRS_TARGET} PRIVATE ${LIBJPEG_TURBO_LIBRARY})
 endif()

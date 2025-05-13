@@ -1100,7 +1100,7 @@ namespace librealsense
             std::memcpy( dest[0], uncompressed_rgb, uncompressed_size );
 
             auto after = std::chrono::system_clock::now();
-            auto duration = std::chrono::duration_cast< std::chrono::microseconds >( after - before ).count();
+            duration = std::chrono::duration_cast< std::chrono::microseconds >( after - before ).count();
             LOG_INFO( rsutils::string::from() << duration );
 
             stbi_image_free( uncompressed_rgb );
